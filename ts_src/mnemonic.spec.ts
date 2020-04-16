@@ -3,6 +3,7 @@ import {
   mnemonicToSeed,
   mnemonicToSeedSync,
 } from './mnemonic';
+import * as bitcoin from 'bitcoinjs-lib';
 
 describe(`mnemonic`, () => {
   it(`should generate random mnemonics`, () => {
@@ -41,5 +42,32 @@ describe(`mnemonic`, () => {
     expect(() => {
       mnemonicToSeedSync(generateMnemonic() + 'z');
     }).toThrowError(/Invalid Seed Version for mnemonic/);
+  });
+  it(`should generate the proper addresses`, () => {
+    // segwit
+    const phrase =
+      'やっと　そうがんきょう　はえる　げつれい　しねま　おらんだ　にきび　たいのう　' +
+      'しみん　おうえん　とかす　たいけん';
+    const firstAddress = 'bc1qlslf54jr59k5l6nk4umexrwddqq6573ucnw9q7';
+    expect(
+      bitcoin.payments.p2wpkh({
+        pubkey: bitcoin.bip32
+          .fromSeed(mnemonicToSeedSync(phrase))
+          .derivePath("m/0'/0/0").publicKey,
+      }).address,
+    ).toEqual(firstAddress);
+
+    // legacy p2pkh
+    const phrase2 =
+      'かんしゃ　ふおん　なわとび　そうり　かろう　はあく　たこく　こわもて　れいせい　' +
+      'こつぶ　きせい　こぜん';
+    const firstAddress2 = '18pHxJbrLSYpUPPD7zFdgBZn27RxsGfWNs';
+    expect(
+      bitcoin.payments.p2pkh({
+        pubkey: bitcoin.bip32
+          .fromSeed(mnemonicToSeedSync(phrase2))
+          .derivePath('m/0/0').publicKey,
+      }).address,
+    ).toEqual(firstAddress2);
   });
 });
