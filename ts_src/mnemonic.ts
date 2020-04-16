@@ -2,7 +2,7 @@ import * as randombytes from 'randombytes';
 import * as createHmac from 'create-hmac';
 import * as pbkdf2 from 'pbkdf2';
 import * as ENGLISH from './wordlists/english.json';
-import { bitlen, encode } from './encoding';
+import { bitlen, encode, normalizeText } from './encoding';
 
 export const PREFIXES = {
   segwit: '100',
@@ -47,8 +47,8 @@ export function mnemonicToSeedSync(mnemonic: string, opts?: Opts): Buffer {
   );
   if (!skipCheck) checkPrefix(mnemonic, validPrefixes);
   return pbkdf2.pbkdf2Sync(
-    mnemonic.normalize('NFKD'),
-    'electrum' + passphrase.normalize('NFKD'),
+    normalizeText(mnemonic),
+    'electrum' + normalizeText(passphrase),
     2048,
     64,
     'sha512',
@@ -67,8 +67,8 @@ export async function mnemonicToSeed(
   if (!skipCheck) checkPrefix(mnemonic, validPrefixes);
   return new Promise((resolve, reject): void => {
     pbkdf2.pbkdf2(
-      mnemonic.normalize('NFKD'),
-      'electrum' + passphrase.normalize('NFKD'),
+      normalizeText(mnemonic),
+      'electrum' + normalizeText(passphrase),
       2048,
       64,
       'sha512',
@@ -94,6 +94,6 @@ function checkPrefix(mn: string, validPrefixes: string[]): void {
 
 function prefixMatches(phrase: string, prefix: string): boolean {
   const hmac = createHmac('sha512', 'Seed version');
-  hmac.update(phrase.normalize('NFKD'));
+  hmac.update(normalizeText(phrase));
   return hmac.digest('hex').startsWith(prefix);
 }
