@@ -2,9 +2,21 @@
   "name": "electrum-mnemonic",
   "version": "0.0.1",
   "description": "Electrum Mnemonics (electrum v2 and greater)",
-  "main": "index.js",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "clean": "rm -rf src",
+    "coverage": "npm run unit -- --coverage",
+    "format": "npm run prettier -- --write",
+    "format:ci": "npm run prettier -- --check",
+    "gitdiff": "git diff --exit-code",
+    "gitdiff:ci": "npm run build && npm run gitdiff",
+    "lint": "tslint -p tsconfig.json -c tslint.json",
+    "prepublishOnly": "npm run test && npm run gitdiff",
+    "prettier": "prettier 'ts_src/**/*.ts' --ignore-path ./.prettierignore",
+    "test": "npm run build && npm run format:ci && npm run lint && npm run unit",
+    "unit": "jest --config=jest.json --runInBand"
   },
   "repository": {
     "type": "git",
@@ -18,8 +30,30 @@
   ],
   "author": "Jonathan Underwood",
   "license": "MIT",
+  "files": [
+    "src"
+  ],
   "bugs": {
     "url": "https://github.com/bitcoinjs/electrum-mnemonic/issues"
   },
-  "homepage": "https://github.com/bitcoinjs/electrum-mnemonic#readme"
+  "homepage": "https://github.com/bitcoinjs/electrum-mnemonic#readme",
+  "devDependencies": {
+    "@types/create-hash": "^1.2.2",
+    "@types/create-hmac": "^1.1.0",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.1",
+    "@types/pbkdf2": "^3.0.0",
+    "@types/randombytes": "^2.0.0",
+    "jest": "^25.3.0",
+    "prettier": "^2.0.4",
+    "ts-jest": "^25.3.1",
+    "tslint": "^6.1.1",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "create-hash": "^1.2.0",
+    "create-hmac": "^1.1.7",
+    "pbkdf2": "^3.0.17",
+    "randombytes": "^2.1.0"
+  }
 }
