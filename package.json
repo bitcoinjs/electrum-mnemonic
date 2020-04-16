@@ -1,6 +1,6 @@
 {
   "name": "electrum-mnemonic",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Electrum Mnemonics (electrum v2 and greater)",
   "main": "src/index.js",
   "types": "src/index.d.ts",
