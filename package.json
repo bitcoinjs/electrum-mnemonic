@@ -38,7 +38,6 @@
   },
   "homepage": "https://github.com/bitcoinjs/electrum-mnemonic#readme",
   "devDependencies": {
-    "@types/create-hash": "^1.2.2",
     "@types/create-hmac": "^1.1.0",
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.1",
@@ -51,7 +50,6 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "create-hash": "^1.2.0",
     "create-hmac": "^1.1.7",
     "pbkdf2": "^3.0.17",
     "randombytes": "^2.1.0"
