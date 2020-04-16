@@ -7,6 +7,7 @@ export function encode(data: Buffer, wordlist: string[] = ENGLISH): string {
   const dataBitLen = data.length * 8;
   const wordBitLen = bitlen(wordlist.length);
   const wordCount = Math.floor(dataBitLen / wordBitLen);
+  maskBytes(data, wordCount * wordBitLen);
   const binStr = bufferToBin(data).slice(-1 * wordCount * wordBitLen);
   const result = [];
   for (let i = 0; i < wordCount; i++) {
@@ -56,6 +57,16 @@ export function normalizeText(str: string): string {
   str = str.trim().split(/\s+/).join(' ');
   // 5. remove whitespaces between CJK
   return removeCJKSpaces(str);
+}
+
+// Only use when bytes.length * 8 >= bits
+export function maskBytes(bytes: Buffer, bits: number): void {
+  const skipByteCount = Math.floor(bits / 8);
+  let lastByteMask = (1 << bits % 8) - 1;
+  for (let i = bytes.length - 1 - skipByteCount; i >= 0; i--) {
+    bytes[i] &= lastByteMask;
+    if (lastByteMask) lastByteMask = 0;
+  }
 }
 
 function bufferToBin(data: Buffer): string {

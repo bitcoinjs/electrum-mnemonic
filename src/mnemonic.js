@@ -19,12 +19,20 @@ const DEFAULTGENOPTS = {
 };
 function generateMnemonic(opts) {
     const { prefix, strength, rng, wordlist } = Object.assign({}, DEFAULTGENOPTS, opts);
+    if (!prefix.match(/[0-9a-f]+/))
+        throw new Error('prefix must be a hex string');
+    if (prefix.length * 4 > strength / 2)
+        throw new Error(`strength must be at least 2x of prefix bit count to ` +
+            `lower endless loop probability.\nprefix: ${prefix} ` +
+            `(${prefix.length * 4} bits)\nstrength: ${strength}`);
     const wordBitLen = encoding_1.bitlen(wordlist.length);
     const wordCount = Math.ceil(strength / wordBitLen);
     const byteCount = Math.ceil((wordCount * wordBitLen) / 8);
     let result = '';
     do {
-        result = encoding_1.encode(rng(byteCount), wordlist);
+        const bytes = rng(byteCount);
+        encoding_1.maskBytes(bytes, strength);
+        result = encoding_1.encode(bytes, wordlist);
     } while (!prefixMatches(result, [prefix])[0]);
     return result;
 }
@@ -67,5 +75,5 @@ function prefixMatches(phrase, prefixes) {
     const hmac = createHmac('sha512', 'Seed version');
     hmac.update(encoding_1.normalizeText(phrase));
     const hx = hmac.digest('hex');
-    return prefixes.map((prefix) => hx.startsWith(prefix));
+    return prefixes.map((prefix) => hx.startsWith(prefix.toLowerCase()));
 }

@@ -2,7 +2,7 @@ import * as randombytes from 'randombytes';
 import * as createHmac from 'create-hmac';
 import * as pbkdf2 from 'pbkdf2';
 import * as ENGLISH from './wordlists/english.json';
-import { bitlen, encode, normalizeText } from './encoding';
+import { bitlen, encode, maskBytes, normalizeText } from './encoding';
 
 export const PREFIXES = {
   segwit: '100',
@@ -31,12 +31,22 @@ export function generateMnemonic(opts?: GenerateOpts): string {
     DEFAULTGENOPTS,
     opts,
   );
+  if (!prefix.match(/[0-9a-f]+/))
+    throw new Error('prefix must be a hex string');
+  if (prefix.length * 4 > strength / 2)
+    throw new Error(
+      `strength must be at least 2x of prefix bit count to ` +
+        `lower endless loop probability.\nprefix: ${prefix} ` +
+        `(${prefix.length * 4} bits)\nstrength: ${strength}`,
+    );
   const wordBitLen = bitlen(wordlist.length);
   const wordCount = Math.ceil(strength / wordBitLen);
   const byteCount = Math.ceil((wordCount * wordBitLen) / 8);
   let result = '';
   do {
-    result = encode(rng(byteCount), wordlist);
+    const bytes = rng(byteCount);
+    maskBytes(bytes, strength);
+    result = encode(bytes, wordlist);
   } while (!prefixMatches(result, [prefix])[0]);
   return result;
 }
@@ -108,5 +118,5 @@ function prefixMatches(phrase: string, prefixes: string[]): boolean[] {
   const hmac = createHmac('sha512', 'Seed version');
   hmac.update(normalizeText(phrase));
   const hx = hmac.digest('hex');
-  return prefixes.map((prefix): boolean => hx.startsWith(prefix));
+  return prefixes.map((prefix): boolean => hx.startsWith(prefix.toLowerCase()));
 }
