@@ -1,0 +1,25 @@
+{
+  "name": "electrum-mnemonic",
+  "version": "0.0.1",
+  "description": "Electrum Mnemonics (electrum v2 and greater)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoinjs/electrum-mnemonic.git"
+  },
+  "keywords": [
+    "electrum",
+    "mnemonic",
+    "seed",
+    "backup"
+  ],
+  "author": "Jonathan Underwood",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bitcoinjs/electrum-mnemonic/issues"
+  },
+  "homepage": "https://github.com/bitcoinjs/electrum-mnemonic#readme"
+}
