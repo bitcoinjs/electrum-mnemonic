@@ -4,7 +4,7 @@ const data = Buffer.from('0fde0102030405060708090a0b0c0d0e0f', 'hex');
 const phrase =
   'worth above amount gauge agree coral search bamboo pass maid crouch sea';
 const pretext = ' aBc あ　いが㍍ ああ ああ  ';
-const posttext = ' abc あいかメートルああああ  ';
+const posttext = 'abc あいかメートルああああ';
 
 describe(`encoding`, () => {
   it(`should encode given data`, () => {

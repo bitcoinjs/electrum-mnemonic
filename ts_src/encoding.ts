@@ -51,7 +51,9 @@ export function normalizeText(str: string): string {
   str = str.toLowerCase();
   // 3. remove accents DONE
   str = removeCombiningCharacters(str);
-  // 4. normalize whitespaces DONE by NFKD normalize
+  // 4. normalize whitespaces DONE (Note: need to remove multiple spaces)
+  // Note: Python split() does a trim before making the list
+  str = str.trim().split(/\s+/).join(' ');
   // 5. remove whitespaces between CJK
   return removeCJKSpaces(str);
 }
