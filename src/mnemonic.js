@@ -25,7 +25,7 @@ function generateMnemonic(opts) {
     let result = '';
     do {
         result = encoding_1.encode(rng(byteCount), wordlist);
-    } while (!prefixMatches(result, prefix));
+    } while (!prefixMatches(result, [prefix])[0]);
     return result;
 }
 exports.generateMnemonic = generateMnemonic;
@@ -57,14 +57,15 @@ async function mnemonicToSeed(mnemonic, opts) {
 }
 exports.mnemonicToSeed = mnemonicToSeed;
 function matchesAnyPrefix(mnemonic, validPrefixes) {
-    return validPrefixes.some((prefix) => prefixMatches(mnemonic, prefix));
+    return prefixMatches(mnemonic, validPrefixes).some((v) => v);
 }
 function checkPrefix(mn, validPrefixes) {
     if (!matchesAnyPrefix(mn, validPrefixes))
         throw new Error('Invalid Seed Version for mnemonic');
 }
-function prefixMatches(phrase, prefix) {
+function prefixMatches(phrase, prefixes) {
     const hmac = createHmac('sha512', 'Seed version');
     hmac.update(encoding_1.normalizeText(phrase));
-    return hmac.digest('hex').startsWith(prefix);
+    const hx = hmac.digest('hex');
+    return prefixes.map((prefix) => hx.startsWith(prefix));
 }

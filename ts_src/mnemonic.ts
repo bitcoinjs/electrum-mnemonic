@@ -37,7 +37,7 @@ export function generateMnemonic(opts?: GenerateOpts): string {
   let result = '';
   do {
     result = encode(rng(byteCount), wordlist);
-  } while (!prefixMatches(result, prefix));
+  } while (!prefixMatches(result, [prefix])[0]);
   return result;
 }
 
@@ -96,9 +96,7 @@ export async function mnemonicToSeed(
 }
 
 function matchesAnyPrefix(mnemonic: string, validPrefixes: string[]): boolean {
-  return validPrefixes.some((prefix): boolean =>
-    prefixMatches(mnemonic, prefix),
-  );
+  return prefixMatches(mnemonic, validPrefixes).some((v): boolean => v);
 }
 
 function checkPrefix(mn: string, validPrefixes: string[]): void {
@@ -106,8 +104,9 @@ function checkPrefix(mn: string, validPrefixes: string[]): void {
     throw new Error('Invalid Seed Version for mnemonic');
 }
 
-function prefixMatches(phrase: string, prefix: string): boolean {
+function prefixMatches(phrase: string, prefixes: string[]): boolean[] {
   const hmac = createHmac('sha512', 'Seed version');
   hmac.update(normalizeText(phrase));
-  return hmac.digest('hex').startsWith(prefix);
+  const hx = hmac.digest('hex');
+  return prefixes.map((prefix): boolean => hx.startsWith(prefix));
 }
