@@ -13,9 +13,9 @@ describe(`mnemonic`, () => {
   });
   it(`should convert mnemonics to seeds async`, async () => {
     const mns = [
-      await mnemonicToSeed(generateMnemonic('01')),
+      await mnemonicToSeed(generateMnemonic({ prefix: '01' })),
       await mnemonicToSeed(generateMnemonic()),
-      await mnemonicToSeed(generateMnemonic('01')),
+      await mnemonicToSeed(generateMnemonic({ prefix: '01' })),
     ];
     expect(mns[0]).not.toEqual(mns[1]);
     expect(mns[0]).not.toEqual(mns[2]);
@@ -26,9 +26,9 @@ describe(`mnemonic`, () => {
   });
   it(`should convert mnemonics to seeds sync`, () => {
     const mns = [
-      mnemonicToSeedSync(generateMnemonic('01')),
+      mnemonicToSeedSync(generateMnemonic({ prefix: '01' })),
       mnemonicToSeedSync(generateMnemonic()),
-      mnemonicToSeedSync(generateMnemonic('01')),
+      mnemonicToSeedSync(generateMnemonic({ prefix: '01' })),
     ];
     expect(mns[0]).not.toEqual(mns[1]);
     expect(mns[0]).not.toEqual(mns[2]);

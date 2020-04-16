@@ -11,8 +11,14 @@ exports.PREFIXES = {
     '2fa': '101',
     '2fa-segwit': '102',
 };
-function generateMnemonic(prefix = exports.PREFIXES.segwit, strength = 132, // 12 words x 2048 wordlist === 132 bits
-rng = randombytes, wordlist = ENGLISH) {
+const DEFAULTGENOPTS = {
+    prefix: exports.PREFIXES.segwit,
+    strength: 132,
+    rng: randombytes,
+    wordlist: ENGLISH,
+};
+function generateMnemonic(opts) {
+    const { prefix, strength, rng, wordlist } = Object.assign({}, DEFAULTGENOPTS, opts);
     const wordBitLen = encoding_1.bitlen(wordlist.length);
     const wordCount = Math.ceil(strength / wordBitLen);
     const byteCount = Math.ceil((wordCount * wordBitLen) / 8);

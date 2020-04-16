@@ -11,12 +11,26 @@ export const PREFIXES = {
   '2fa-segwit': '102',
 };
 
-export function generateMnemonic(
-  prefix: string = PREFIXES.segwit,
-  strength: number = 132, // 12 words x 2048 wordlist === 132 bits
-  rng: (size: number) => Buffer = randombytes,
-  wordlist: string[] = ENGLISH,
-): string {
+interface GenerateOpts {
+  prefix?: string;
+  strength?: number;
+  rng?: (size: number) => Buffer;
+  wordlist?: string[];
+}
+
+const DEFAULTGENOPTS = {
+  prefix: PREFIXES.segwit,
+  strength: 132, // 12 words x 2048 wordlist === 132 bits
+  rng: randombytes,
+  wordlist: ENGLISH,
+};
+
+export function generateMnemonic(opts?: GenerateOpts): string {
+  const { prefix, strength, rng, wordlist } = Object.assign(
+    {},
+    DEFAULTGENOPTS,
+    opts,
+  );
   const wordBitLen = bitlen(wordlist.length);
   const wordCount = Math.ceil(strength / wordBitLen);
   const byteCount = Math.ceil((wordCount * wordBitLen) / 8);
@@ -27,7 +41,7 @@ export function generateMnemonic(
   return result;
 }
 
-interface Opts {
+interface SeedOpts {
   passphrase?: string;
   validPrefixes?: string[];
   skipCheck?: boolean;
@@ -39,7 +53,7 @@ const DEFAULTOPTS = {
   skipCheck: false,
 };
 
-export function mnemonicToSeedSync(mnemonic: string, opts?: Opts): Buffer {
+export function mnemonicToSeedSync(mnemonic: string, opts?: SeedOpts): Buffer {
   const { passphrase, validPrefixes, skipCheck } = Object.assign(
     {},
     DEFAULTOPTS,
@@ -57,7 +71,7 @@ export function mnemonicToSeedSync(mnemonic: string, opts?: Opts): Buffer {
 
 export async function mnemonicToSeed(
   mnemonic: string,
-  opts?: Opts,
+  opts?: SeedOpts,
 ): Promise<Buffer> {
   const { passphrase, validPrefixes, skipCheck } = Object.assign(
     {},
