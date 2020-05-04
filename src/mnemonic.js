@@ -5,6 +5,7 @@ const createHmac = require('create-hmac');
 const pbkdf2 = require('pbkdf2');
 const ENGLISH = require('./wordlists/english.json');
 const encoding_1 = require('./encoding');
+const INVALID_MNEMONIC_MESSAGE = 'Invalid Seed Version for mnemonic';
 exports.PREFIXES = {
   segwit: '100',
   standard: '01',
@@ -23,8 +24,7 @@ function generateMnemonic(opts) {
     DEFAULTGENOPTS,
     opts,
   );
-  if (!prefix.match(/[0-9a-f]+/))
-    throw new Error('prefix must be a hex string');
+  validatePrefixFormat(prefix);
   if (prefix.length * 4 > strength / 2)
     throw new Error(
       `strength must be at least 2x of prefix bit count to ` +
@@ -45,16 +45,17 @@ function generateMnemonic(opts) {
 exports.generateMnemonic = generateMnemonic;
 const DEFAULTOPTS = {
   passphrase: '',
-  validPrefixes: Object.values(exports.PREFIXES),
+  prefix: exports.PREFIXES.segwit,
   skipCheck: false,
 };
 function mnemonicToSeedSync(mnemonic, opts) {
-  const { passphrase, validPrefixes, skipCheck } = Object.assign(
+  const { passphrase, prefix, skipCheck } = Object.assign(
     {},
     DEFAULTOPTS,
     opts,
   );
-  if (!skipCheck) checkPrefix(mnemonic, validPrefixes);
+  validatePrefixFormat(prefix);
+  if (!skipCheck) checkPrefix(mnemonic, [prefix]);
   return pbkdf2.pbkdf2Sync(
     encoding_1.normalizeText(mnemonic),
     'electrum' + encoding_1.normalizeText(passphrase),
@@ -65,12 +66,13 @@ function mnemonicToSeedSync(mnemonic, opts) {
 }
 exports.mnemonicToSeedSync = mnemonicToSeedSync;
 async function mnemonicToSeed(mnemonic, opts) {
-  const { passphrase, validPrefixes, skipCheck } = Object.assign(
+  const { passphrase, prefix, skipCheck } = Object.assign(
     {},
     DEFAULTOPTS,
     opts,
   );
-  if (!skipCheck) checkPrefix(mnemonic, validPrefixes);
+  validatePrefixFormat(prefix);
+  if (!skipCheck) checkPrefix(mnemonic, [prefix]);
   return new Promise((resolve, reject) => {
     pbkdf2.pbkdf2(
       encoding_1.normalizeText(mnemonic),
@@ -87,12 +89,31 @@ async function mnemonicToSeed(mnemonic, opts) {
   });
 }
 exports.mnemonicToSeed = mnemonicToSeed;
+function validateMnemonic(mnemonic, prefix) {
+  validatePrefixFormat(prefix);
+  try {
+    checkPrefix(mnemonic, [prefix]);
+    return true;
+  } catch (e) {
+    /* istanbul ignore else  */
+    if (e.message === INVALID_MNEMONIC_MESSAGE) {
+      return false;
+    }
+    /* istanbul ignore next */
+    throw e;
+  }
+}
+exports.validateMnemonic = validateMnemonic;
 function matchesAnyPrefix(mnemonic, validPrefixes) {
   return prefixMatches(mnemonic, validPrefixes).some((v) => v);
 }
+function validatePrefixFormat(prefix) {
+  if (!prefix.match(/^[0-9a-f]+$/) || prefix.length > 128)
+    throw new Error('prefix must be a hex string');
+}
 function checkPrefix(mn, validPrefixes) {
   if (!matchesAnyPrefix(mn, validPrefixes))
-    throw new Error('Invalid Seed Version for mnemonic');
+    throw new Error(INVALID_MNEMONIC_MESSAGE);
 }
 function prefixMatches(phrase, prefixes) {
   const hmac = createHmac('sha512', 'Seed version');

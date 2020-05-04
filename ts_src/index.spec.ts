@@ -5,5 +5,13 @@ describe('index', () => {
     expect(index.generateMnemonic).toBeDefined();
     expect(index.mnemonicToSeed).toBeDefined();
     expect(index.mnemonicToSeedSync).toBeDefined();
+    expect(index.validateMnemonic).toBeDefined();
+    expect(Object.keys(index).sort()).toEqual([
+      'PREFIXES',
+      'generateMnemonic',
+      'mnemonicToSeed',
+      'mnemonicToSeedSync',
+      'validateMnemonic',
+    ]);
   });
 });
