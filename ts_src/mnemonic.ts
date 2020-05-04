@@ -18,6 +18,10 @@ interface GenerateOpts {
   wordlist?: string[];
 }
 
+interface AsyncGenerateOpts extends GenerateOpts {
+  interval?: number;
+}
+
 const DEFAULTGENOPTS = {
   prefix: PREFIXES.segwit,
   strength: 132, // 12 words x 2048 wordlist === 132 bits
@@ -26,24 +30,27 @@ const DEFAULTGENOPTS = {
 };
 
 export function generateMnemonic(opts?: GenerateOpts): string {
-  const { prefix, strength, rng, wordlist } = Object.assign(
-    {},
-    DEFAULTGENOPTS,
-    opts,
-  );
-  if (!prefix.match(/[0-9a-f]+/))
-    throw new Error('prefix must be a hex string');
-  if (prefix.length * 4 > strength / 2)
-    throw new Error(
-      `strength must be at least 2x of prefix bit count to ` +
-        `lower endless loop probability.\nprefix: ${prefix} ` +
-        `(${prefix.length * 4} bits)\nstrength: ${strength}`,
-    );
-  const wordBitLen = bitlen(wordlist.length);
-  const wordCount = Math.ceil(strength / wordBitLen);
-  const byteCount = Math.ceil((wordCount * wordBitLen) / 8);
+  const { rng, byteCount, strength, wordlist, prefix } = prepareGenerate(opts);
   let result = '';
   do {
+    const bytes = rng(byteCount);
+    maskBytes(bytes, strength);
+    result = encode(bytes, wordlist);
+  } while (!prefixMatches(result, [prefix])[0]);
+  return result;
+}
+
+export async function generateMnemonicAsync(
+  opts?: AsyncGenerateOpts,
+): Promise<string> {
+  const { rng, byteCount, strength, wordlist, prefix } = prepareGenerate(opts);
+  const interval = (opts || {}).interval || 50;
+  let result = '';
+  let counter = 1;
+  do {
+    if (counter % interval === 0)
+      await new Promise((r): any => setTimeout(r, 0));
+    counter++;
     const bytes = rng(byteCount);
     maskBytes(bytes, strength);
     result = encode(bytes, wordlist);
@@ -103,6 +110,34 @@ export async function mnemonicToSeed(
       },
     );
   });
+}
+
+function prepareGenerate(
+  opts?: GenerateOpts,
+): {
+  prefix: string;
+  strength: number;
+  rng: (size: number) => Buffer;
+  wordlist: string[];
+  byteCount: number;
+} {
+  const { prefix, strength, rng, wordlist } = Object.assign(
+    {},
+    DEFAULTGENOPTS,
+    opts,
+  );
+  if (!prefix.match(/[0-9a-f]+/))
+    throw new Error('prefix must be a hex string');
+  if (prefix.length * 4 > strength / 2)
+    throw new Error(
+      `strength must be at least 2x of prefix bit count to ` +
+        `lower endless loop probability.\nprefix: ${prefix} ` +
+        `(${prefix.length * 4} bits)\nstrength: ${strength}`,
+    );
+  const wordBitLen = bitlen(wordlist.length);
+  const wordCount = Math.ceil(strength / wordBitLen);
+  const byteCount = Math.ceil((wordCount * wordBitLen) / 8);
+  return { prefix, strength, rng, wordlist, byteCount };
 }
 
 function matchesAnyPrefix(mnemonic: string, validPrefixes: string[]): boolean {

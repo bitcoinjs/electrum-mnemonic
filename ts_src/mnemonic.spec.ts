@@ -1,5 +1,6 @@
 import {
   generateMnemonic,
+  generateMnemonicAsync,
   mnemonicToSeed,
   mnemonicToSeedSync,
 } from './mnemonic';
@@ -8,9 +9,17 @@ import * as bitcoin from 'bitcoinjs-lib';
 describe(`mnemonic`, () => {
   let freshMnemonic1: string;
   let freshMnemonic2: string;
-  beforeAll(() => {
+  let freshMnemonic3: string;
+  let freshMnemonic4: string;
+  beforeAll(async () => {
     freshMnemonic1 = generateMnemonic();
-    freshMnemonic2 = generateMnemonic({ prefix: '01' });
+    freshMnemonic2 = await generateMnemonicAsync({
+      prefix: '01',
+    });
+    freshMnemonic3 = await generateMnemonicAsync();
+    freshMnemonic4 = await generateMnemonicAsync({
+      interval: 49,
+    });
   });
   it(`should generate random mnemonics`, () => {
     expect(freshMnemonic1).not.toEqual(freshMnemonic2);
@@ -27,8 +36,8 @@ describe(`mnemonic`, () => {
   });
   it(`should convert mnemonics to seeds sync`, () => {
     const mns = [
-      mnemonicToSeedSync(freshMnemonic2),
-      mnemonicToSeedSync(freshMnemonic1),
+      mnemonicToSeedSync(freshMnemonic3),
+      mnemonicToSeedSync(freshMnemonic4),
     ];
     expect(mns[0]).not.toEqual(mns[1]);
     expect(() => {
