@@ -24,6 +24,16 @@ console.log(mn.generateMnemonic({ prefix: mn.PREFIXES['2fa'] })) // 2fa legacy
 console.log(mn.generateMnemonic({ prefix: mn.PREFIXES['2fa-segwit'] })) // legacy p2pkh wallet (base58 address starting with 1)
 ```
 
+* Validate mnemonic phrase (default prefix: segwit)
+
+```js
+const mn = require('electrum-mnemonic')
+const segwitPhrase = mn.generateMnemonic();
+const standardPhrase = mn.generateMnemonic({ prefix: mn.PREFIXES.standard });
+console.log(mn.validateMnemonic(segwitPhrase, mn.PREFIXES.segwit)); // true
+console.log(mn.validateMnemonic(standardPhrase, mn.PREFIXES.standard)); // true
+```
+
 * Convert mnemonic into 64 byte seed (for bip32)
 
 ```js
@@ -40,6 +50,18 @@ console.log(seed)
 })()
 ```
 
+* mnemonicToSeed prefix must match the prefix used to generate (default: segwit)
+
+```js
+const mn = require('electrum-mnemonic')
+const phrase = mn.generateMnemonic({ prefix: mn.PREFIXES.standard })
+const seed = mn.mnemonicToSeedSync(phrase, { prefix: mn.PREFIXES.standard })
+console.log(seed)
+const segwitPhrase = mn.generateMnemonic()
+const segwitSeed = mn.mnemonicToSeedSync(phrase)
+console.log(segwitSeed)
+```
+
 * Skip valid version prefix check
 
 ```js
@@ -53,6 +75,6 @@ console.log(seed)
 ```js
 const mn = require('electrum-mnemonic')
 const phrase = mn.generateMnemonic({ prefix: 'fed' })
-const seed = mn.mnemonicToSeedSync(phrase, { validPrefixes: mn.PREFIXES.concat(['fed']) })
+const seed = mn.mnemonicToSeedSync(phrase, { prefix: 'fed' })
 console.log(seed)
 ```

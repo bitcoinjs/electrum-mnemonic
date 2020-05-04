@@ -4,6 +4,8 @@ import * as pbkdf2 from 'pbkdf2';
 import * as ENGLISH from './wordlists/english.json';
 import { bitlen, encode, maskBytes, normalizeText } from './encoding';
 
+const INVALID_MNEMONIC_MESSAGE = 'Invalid Seed Version for mnemonic';
+
 export const PREFIXES = {
   segwit: '100',
   standard: '01',
@@ -31,8 +33,7 @@ export function generateMnemonic(opts?: GenerateOpts): string {
     DEFAULTGENOPTS,
     opts,
   );
-  if (!prefix.match(/[0-9a-f]+/))
-    throw new Error('prefix must be a hex string');
+  validatePrefixFormat(prefix);
   if (prefix.length * 4 > strength / 2)
     throw new Error(
       `strength must be at least 2x of prefix bit count to ` +
@@ -53,23 +54,24 @@ export function generateMnemonic(opts?: GenerateOpts): string {
 
 interface SeedOpts {
   passphrase?: string;
-  validPrefixes?: string[];
+  prefix?: string;
   skipCheck?: boolean;
 }
 
 const DEFAULTOPTS = {
   passphrase: '',
-  validPrefixes: Object.values(PREFIXES),
+  prefix: PREFIXES.segwit,
   skipCheck: false,
 };
 
 export function mnemonicToSeedSync(mnemonic: string, opts?: SeedOpts): Buffer {
-  const { passphrase, validPrefixes, skipCheck } = Object.assign(
+  const { passphrase, prefix, skipCheck } = Object.assign(
     {},
     DEFAULTOPTS,
     opts,
   );
-  if (!skipCheck) checkPrefix(mnemonic, validPrefixes);
+  validatePrefixFormat(prefix);
+  if (!skipCheck) checkPrefix(mnemonic, [prefix]);
   return pbkdf2.pbkdf2Sync(
     normalizeText(mnemonic),
     'electrum' + normalizeText(passphrase),
@@ -83,12 +85,13 @@ export async function mnemonicToSeed(
   mnemonic: string,
   opts?: SeedOpts,
 ): Promise<Buffer> {
-  const { passphrase, validPrefixes, skipCheck } = Object.assign(
+  const { passphrase, prefix, skipCheck } = Object.assign(
     {},
     DEFAULTOPTS,
     opts,
   );
-  if (!skipCheck) checkPrefix(mnemonic, validPrefixes);
+  validatePrefixFormat(prefix);
+  if (!skipCheck) checkPrefix(mnemonic, [prefix]);
   return new Promise((resolve, reject): void => {
     pbkdf2.pbkdf2(
       normalizeText(mnemonic),
@@ -105,13 +108,33 @@ export async function mnemonicToSeed(
   });
 }
 
+export function validateMnemonic(mnemonic: string, prefix: string): boolean {
+  validatePrefixFormat(prefix);
+  try {
+    checkPrefix(mnemonic, [prefix]);
+    return true;
+  } catch (e) {
+    /* istanbul ignore else  */
+    if (e.message === INVALID_MNEMONIC_MESSAGE) {
+      return false;
+    }
+    /* istanbul ignore next */
+    throw e;
+  }
+}
+
 function matchesAnyPrefix(mnemonic: string, validPrefixes: string[]): boolean {
   return prefixMatches(mnemonic, validPrefixes).some((v): boolean => v);
 }
 
+function validatePrefixFormat(prefix: string): void {
+  if (!prefix.match(/^[0-9a-f]+$/) || prefix.length > 128)
+    throw new Error('prefix must be a hex string');
+}
+
 function checkPrefix(mn: string, validPrefixes: string[]): void {
   if (!matchesAnyPrefix(mn, validPrefixes))
-    throw new Error('Invalid Seed Version for mnemonic');
+    throw new Error(INVALID_MNEMONIC_MESSAGE);
 }
 
 function prefixMatches(phrase: string, prefixes: string[]): boolean[] {

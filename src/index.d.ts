@@ -1,1 +1,1 @@
-export { generateMnemonic, mnemonicToSeed, mnemonicToSeedSync, PREFIXES, } from './mnemonic';
+export { generateMnemonic, mnemonicToSeed, mnemonicToSeedSync, validateMnemonic, PREFIXES, } from './mnemonic';
